@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>School Portal Login</title>
+  <style>
+    body {
+    font-family: lora;
+    background-color: #f2f2f2;
+  }
+  
+  .container {
+    width: 500px;
+    margin: 100px auto;
+    padding: 90px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-top: 5px;
+    font-size: 40px;
+  }
+  
+  form {
+    margin-top: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+  }
+  
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  button {
+    width: 80%;
+    padding: 10px;
+    background-color: #4caf50;
+    border: none;
+    color: #fff;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: 20px;
+    margin-left: 50px;
+    margin-right: auto;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  button:active {
+    background-color: #3c903c;
+  }
+  
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>School Portal Login</h1>
+    <form id="login-form" onsubmit="access(event)">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="email" name="email" placeholder="Enter E-mail ID" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" placeholder="Enter Password" required>
+      </div>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+  <script src="access.js"></script>
+	<script>
+	// Load the Google Sheets API client library
+gapi.load('client', initClient);
+
+// Client initialization
+function initClient() {
+  gapi.client.init({
+    apiKey: 'YOUR_API_KEY',
+    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+  }).then(function() {
+    // Call the function to check login credentials
+    checkLogin();
+  }, function(error) {
+    console.error('Error initialising Google Sheets API:', error);
+  });
+}
+
+// Check login credentials
+function checkLogin() {
+  // Prompt user for email and password
+  var email = prompt('Enter your email:');
+  var password = prompt('Enter your password:');
+
+  // Retrieve teacher email IDs from Google Sheets
+  gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId: 'TEACHER_SPREADSHEET_ID',
+    range: 'Sheet1!A:A' // Assuming teacher email IDs are in column A
+  }).then(function(response) {
+    var teacherEmails = response.result.values;
+
+    // Retrieve student email IDs from Google Sheets
+    gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: 'STUDENT_SPREADSHEET_ID',
+      range: 'Sheet1!A:A' // Assuming student email IDs are in column A
+    }).then(function(response) {
+      var studentEmails = response.result.values;
+
+      // Check if the entered email and password match teacher credentials
+      var isTeacher = teacherEmails.some(function(teacherEmail) {
+        return teacherEmail[0] === email && teacherEmail[1] === password;
+      });
+
+      // Check if the entered email and password match student credentials
+      var isStudent = studentEmails.some(function(studentEmail) {
+        return studentEmail[0] === email && studentEmail[1] === password;
+      });
+
+      // Redirect to the appropriate page based on the login credentials
+      if (isTeacher) {
+        window.location.href = 'teacher_page.html'; // Replace with the URL of the teacher page
+      } else if (isStudent) {
+        window.location.href = 'student_page.html'; // Replace with the URL of the student page
+      } else {
+        console.log('Invalid email or password');
+      }
+    }, function(error) {
+      console.error('Error retrieving student email IDs:', error);
+    });
+  }, function(error) {
+    console.error('Error retrieving teacher email IDs:', error);
+  });
+}
+
+	</script>
+</body>
+</html>

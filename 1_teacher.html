@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Teacher Marks</title>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio</title>
+ <style>
+  body {
+    font-family: lora;
+    background-color: #f2f2f2;
+  }
+  
+  h1 {
+    text-align: center;
+    color:blue;
+    margin-top: 30px;
+    font-size: 30px;
+  }
+  #schoolname{
+    text-align: center;
+    color:black;
+    margin-top: 50px;
+    font-size: 50px;
+  }
+  #portal{
+    text-align: center;
+    color:blueviolet;
+    margin-top: 40px;
+    font-size: 30px;
+  }
+  .container {
+    width: 700px;
+    text-align: center;
+    margin-top: 100px;
+    height: 500px;
+    margin: 80px;
+    padding: 30px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+  button {
+    width: 70px;
+    height: 35px;
+    padding: 10px;
+    background-color: #4caf50;
+    border: none;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  button:active {
+    background-color: #3c903c;
+  }
+#admission{
+  margin-top: 20px;
+  font-size: 20px;
+}
+ </style>
+</head>
+<body>
+  <div class="container">
+    <p id="schoolname">SCHOOL NAME</p>
+    <p id="portal">TEACHER'S PORTAL</p>
+    <h1>STUDENT RESULT INFO</h1>
+    <form>
+      <label for="admission">Admission No:</label>
+      <input type="text" id="admission" name="admission">   
+  
+      <button type="submit">Search</button>
+  </div>
+	<script>
+	// Load the Google Sheets API client library
+gapi.load('client', initClient);
+
+// Client initialization
+function initClient() {
+  gapi.client.init({
+    apiKey: 'YOUR_API_KEY',
+    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+  }).then(function() {
+    // Call the function to retrieve student data and display the form
+    getStudentData();
+  }, function(error) {
+    console.error('Error initialising Google Sheets API:', error);
+  });
+}
+
+// Retrieve student data from Google Sheets
+function getStudentData() {
+  gapi.client.sheets.spreadsheets.values.get({
+    spreadsheetId: 'YOUR_SPREADSHEET_ID',
+    range: 'Sheet1!A2:D' // Assuming student data is in columns A to D starting from row 2
+  }).then(function(response) {
+    var studentData = response.result.values;
+
+    // Prompt user for admission number
+    var admissionNumber = prompt('Enter admission number:');
+
+    // Find the student with the provided admission number
+    var student = studentData.find(function(student) {
+      return student[0] === admissionNumber;
+    });
+
+    if (student) {
+      // Display student credentials in a tabular form
+      var table = document.createElement('table');
+      var headerRow = table.insertRow();
+      var headers = ['Admission Number', 'Name', 'Class', 'DOB']; 
+
+      // Create table headers
+      headers.forEach(function(header) {
+        var th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+      });
+
+      // Create table row with student data
+      var row = table.insertRow();
+      student.forEach(function(data) {
+        var td = document.createElement('td');
+        td.textContent = data;
+        row.appendChild(td);
+      });
+
+      // Append table to the document body
+      document.body.appendChild(table);
+
+      // Prompt user to enter exam results
+      var examResults = prompt('Enter exam results:');
+
+      // Update the spreadsheet with the entered exam results
+      gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: 'YOUR_SPREADSHEET_ID',
+        range: 'Sheet1!E' + row.rowIndex, // Assuming the exam results column is column E
+        valueInputOption: 'USER_ENTERED',
+        resource: {
+          values: [[examResults]]
+        }
+      }).then(function(response) {
+        console.log('Exam results updated successfully:', response);
+      }, function(error) {
+        console.error('Error updating exam results:', error);
+      });
+    } else {
+      console.log('Student not found');
+    }
+  }, function(error) {
+    console.error('Error retrieving student data:', error);
+  });
+}
+
+	</script>
+</body>
+</html>
